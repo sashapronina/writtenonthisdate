@@ -146,8 +146,8 @@ function App() {
       />
 
       <div className="paperclips" aria-hidden="true">
-        <img className="paperclips__clip paperclips__clip--top" src="/paperclip.png" alt="" />
-        <img className="paperclips__clip paperclips__clip--bottom" src="/paperclip.png" alt="" />
+        <img className="paperclips__clip paperclips__clip--top" src="./paperclip.png" alt="" />
+        <img className="paperclips__clip paperclips__clip--bottom" src="./paperclip.png" alt="" />
       </div>
 
       <DayStepper
