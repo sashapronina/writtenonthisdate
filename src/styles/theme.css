@@ -180,12 +180,13 @@ body {
   opacity: 0.82;
   white-space: pre-wrap;
   user-select: none;
-  filter: blur(0);
+  filter: blur(1.25px);
 }
 
 .paper-stack__sheet--left .paper-stack__placeholder {
   color: rgba(40, 38, 35, 0.17);
-  opacity: 0.7;
+  opacity: 0.66;
+  filter: blur(1.8px);
 }
 
 .discarded-page {
@@ -257,13 +258,13 @@ body {
   background:
     radial-gradient(
       ellipse 72% 62% at 50% 50%,
-      rgba(252, 248, 240, 0.5),
+      rgba(252, 248, 240, 0.38),
       transparent 72%
     ),
     linear-gradient(
       to bottom,
-      rgba(250, 245, 236, 0.5) 0%,
-      rgba(246, 239, 228, 0.5) 100%
+      rgba(250, 245, 236, 0.36) 0%,
+      rgba(246, 239, 228, 0.34) 100%
     ),
     radial-gradient(circle at 16% 12%, rgba(253, 249, 242, 0.34), transparent 38%),
     repeating-linear-gradient(
@@ -273,8 +274,8 @@ body {
       rgba(243, 235, 222, 0.06) 1px,
       rgba(243, 235, 222, 0.06) 3px
     );
-  backdrop-filter: blur(1px) saturate(1.02) contrast(1.02);
-  -webkit-backdrop-filter: blur(1px) saturate(1.02) contrast(1.02);
+  backdrop-filter: blur(2.6px) saturate(1.03) contrast(1.02);
+  -webkit-backdrop-filter: blur(2.6px) saturate(1.03) contrast(1.02);
   box-shadow: none;
   transform: translate(-50%, -50%) rotate(-0.75deg);
   animation: sheet-settle 650ms ease-out both;
