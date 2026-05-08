@@ -338,6 +338,15 @@ body {
   text-shadow: 0 0 0.01px rgba(0, 0, 0, 0.35);
 }
 
+.poem-sheet__body--typing {
+  filter: blur(0.65px);
+}
+
+.poem-sheet__body--sharp {
+  filter: blur(0);
+  transition: filter 220ms ease-out;
+}
+
 .poem-sheet__body--fade-in {
   animation: poem-body-fade-in 1400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }

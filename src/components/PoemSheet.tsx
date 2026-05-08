@@ -100,7 +100,12 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
           ) : null}
         </header>
         <div className="poem-sheet__scrollable">
-          <div key={bodyAnimationKey} className="poem-sheet__body poem-sheet__body--fade-in">
+          <div
+            key={bodyAnimationKey}
+            className={`poem-sheet__body poem-sheet__body--fade-in ${
+              isTypingComplete ? 'poem-sheet__body--sharp' : 'poem-sheet__body--typing'
+            }`}
+          >
             {visibleBody}
           </div>
           <footer
@@ -125,7 +130,12 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
         ) : null}
       </header>
       <div className="poem-sheet__scrollable">
-        <div key={bodyAnimationKey} className="poem-sheet__body poem-sheet__body--fade-in">
+        <div
+          key={bodyAnimationKey}
+          className={`poem-sheet__body poem-sheet__body--fade-in ${
+            isTypingComplete ? 'poem-sheet__body--sharp' : 'poem-sheet__body--typing'
+          }`}
+        >
           {visibleBody}
         </div>
         <footer
