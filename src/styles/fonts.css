@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap');
+
+:root {
+  --font-typewriter:
+    'Atkinson Hyperlegible Mono', 'IBM Plex Mono', 'Courier New', monospace;
+}
