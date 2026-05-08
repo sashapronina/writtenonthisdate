@@ -9,6 +9,7 @@ export type Poem = {
   month: number
   day: number
   year?: number
+  approximateDate?: boolean
   source?: string
 }
 

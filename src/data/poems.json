@@ -16,6 +16,17 @@
     "body": "A day with a splash of May in it!\nA day with a dash of spray in it!\nA day with a hint of the soul of the spring,\nWith the scent of the bud and the flash of the wing,\nWith a song and a thrill and a wonderful thing--\nA day with a splash of May in it!\n\nA heart with a hope of the best in it!\nA heart with a scope of the rest in it!\nA heart with a dream of the glory to be,\nWith a glimpse of the land and a taste of the sea,\nWith a touch of the spirit that sets a man free--\nA heart with a hope of the best in it!",
     "month": 5,
     "day": 10,
+    "approximateDate": true,
     "source": "Public domain poetry collections"
+  },
+  {
+    "id": "emily-dickinson-by",
+    "title": "By",
+    "author": "Emily Dickinson",
+    "body": "Pink, small, and punctual,\nAromatic, low,\nCovert in April,\nCandid in May,\n\nDear to the moss,\nKnown by the knoll,\nNext to the robin\nIn every human soul.\n\nBold little beauty,\nBedecked with thee,\nNature forswears\nAntiquity.",
+    "month": 5,
+    "day": 9,
+    "approximateDate": true,
+    "source": "Emily Dickinson, public domain editions"
   }
 ]

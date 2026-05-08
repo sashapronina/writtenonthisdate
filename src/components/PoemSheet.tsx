@@ -7,32 +7,45 @@ type PoemSheetProps = {
   className?: string
 }
 
-const placeholderPoem: Pick<Poem, 'title' | 'author' | 'body'> = {
+const placeholderPoem: Pick<Poem, 'title' | 'author' | 'body' | 'approximateDate'> = {
   title: 'Untitled (placeholder)',
   author: 'Archive placeholder',
+  approximateDate: true,
   body:
-    'This is placeholder text for dates where we do not have a poem yet.\n\n' +
-    'Use this page to validate long-form rhythm, line wrapping, and scroll behavior.\n' +
-    'The final poem text can be swapped in later without layout changes.\n\n' +
-    'The quick brown fox jumps over the lazy dog.\n' +
-    'Sphinx of black quartz, judge my vow.\n' +
-    'Pack my box with five dozen liquor jugs.\n\n' +
-    'Until an authentic entry is added to the archive, this placeholder keeps\n' +
-    'the paper presentation realistic and testable across dates.',
+    "We don't have all the poems just yet, but we will. While we work on collecting poems that have an exact date, take a moment to appreciate Derek Walcott's Love after Love. Written in 1976 without an exact date\n\n" +
+    'The time will come\n' +
+    'when, with elation,\n' +
+    'you will greet yourself arriving\n' +
+    'at your own door, in your own mirror\n' +
+    "and each will smile at the other's welcome,\n" +
+    'and say, sit here. Eat.\n' +
+    'You will love again the stranger who was your self.\n' +
+    'Give wine. Give bread, Give back your heart\n' +
+    'to itself, to the stranger who has loved you\n' +
+    'all your life, whom you ignored\n' +
+    'for another, who knows you by heart.\n' +
+    'Take down the love letters from the bookshelf\n' +
+    'the photographs, the desperate notes,\n' +
+    'peel your own image from the mirror.\n' +
+    'Sit. Feast on your life.',
 }
 
-const TYPEWRITER_DURATION_MS = 800
+const TYPEWRITER_DURATION_MS = 3600
 const TYPEWRITER_TICK_MS = 16
 
 export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
   const bodyText = poem?.body ?? placeholderPoem.body
   const [visibleBody, setVisibleBody] = useState(bodyText)
+  const [bodyAnimationKey, setBodyAnimationKey] = useState(0)
+  const [isTypingComplete, setIsTypingComplete] = useState(true)
   const sheetClassName = className ? `poem-sheet ${className}` : 'poem-sheet'
 
   useEffect(() => {
     if (!bodyText) {
       const frameId = window.requestAnimationFrame(() => {
         setVisibleBody('')
+        setBodyAnimationKey((key) => key + 1)
+        setIsTypingComplete(true)
       })
       return () => {
         window.cancelAnimationFrame(frameId)
@@ -42,6 +55,8 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const frameId = window.requestAnimationFrame(() => {
         setVisibleBody(bodyText)
+        setBodyAnimationKey((key) => key + 1)
+        setIsTypingComplete(true)
       })
       return () => {
         window.cancelAnimationFrame(frameId)
@@ -50,6 +65,8 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
 
     const initialFrameId = window.requestAnimationFrame(() => {
       setVisibleBody('')
+      setBodyAnimationKey((key) => key + 1)
+      setIsTypingComplete(false)
     })
 
     const totalChars = bodyText.length
@@ -62,6 +79,7 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
       setVisibleBody(bodyText.slice(0, currentCharCount))
 
       if (currentCharCount >= totalChars) {
+        setIsTypingComplete(true)
         window.clearInterval(intervalId)
       }
     }, TYPEWRITER_TICK_MS)
@@ -77,10 +95,19 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
       <article className={sheetClassName} aria-live="polite">
         <header className="poem-sheet__header">
           <h1 className="poem-sheet__title">{placeholderPoem.title}</h1>
+          {placeholderPoem.approximateDate ? (
+            <span className="poem-sheet__approximate-date">Approximate date</span>
+          ) : null}
         </header>
         <div className="poem-sheet__scrollable">
-          <div className="poem-sheet__body">{visibleBody}</div>
-          <footer className="poem-sheet__footer">
+          <div key={bodyAnimationKey} className="poem-sheet__body poem-sheet__body--fade-in">
+            {visibleBody}
+          </div>
+          <footer
+            className={`poem-sheet__footer ${
+              isTypingComplete ? 'poem-sheet__footer--visible' : 'poem-sheet__footer--hidden'
+            }`}
+          >
             <p>{placeholderPoem.author}</p>
             <p>{dateLabel}</p>
           </footer>
@@ -93,10 +120,19 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
     <article className={sheetClassName} aria-live="polite">
       <header className="poem-sheet__header">
         <h1 className="poem-sheet__title">{poem.title}</h1>
+        {poem.approximateDate ? (
+          <span className="poem-sheet__approximate-date">Approximate date</span>
+        ) : null}
       </header>
       <div className="poem-sheet__scrollable">
-        <div className="poem-sheet__body">{visibleBody}</div>
-        <footer className="poem-sheet__footer">
+        <div key={bodyAnimationKey} className="poem-sheet__body poem-sheet__body--fade-in">
+          {visibleBody}
+        </div>
+        <footer
+          className={`poem-sheet__footer ${
+            isTypingComplete ? 'poem-sheet__footer--visible' : 'poem-sheet__footer--hidden'
+          }`}
+        >
           <p>{poem.author}</p>
           <p>
             {dateLabel}

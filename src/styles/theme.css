@@ -96,8 +96,8 @@ body {
   height: 7.4rem;
   padding: 0.5rem;
   border-radius: 0.25rem;
-  background: rgba(20, 20, 20, 0.88);
-  color: var(--panel-text);
+  background: rgba(0, 0, 0, 0.88);
+  color: rgba(255, 255, 255, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -281,11 +281,11 @@ body {
 }
 
 .poem-sheet--nudge-from-left {
-  animation: sheet-nudge-from-left 360ms ease-out both;
+  animation: sheet-nudge-from-left 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .poem-sheet--nudge-from-right {
-  animation: sheet-nudge-from-right 360ms ease-out both;
+  animation: sheet-nudge-from-right 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .poem-sheet::before {
@@ -300,6 +300,10 @@ body {
 }
 
 .poem-sheet__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 0.6rem;
 }
 
@@ -309,6 +313,14 @@ body {
   font-weight: 600;
   letter-spacing: -2px;
   color: var(--ink-strong);
+}
+
+.poem-sheet__approximate-date {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #868686;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 .poem-sheet__meta {
@@ -324,6 +336,10 @@ body {
   letter-spacing: 0.005em;
   color: var(--ink-soft);
   text-shadow: 0 0 0.01px rgba(0, 0, 0, 0.35);
+}
+
+.poem-sheet__body--fade-in {
+  animation: poem-body-fade-in 1400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .poem-sheet__scrollable {
@@ -364,6 +380,15 @@ body {
   gap: 0.2rem;
   margin-top: 1.65rem;
   font-size: 1rem;
+}
+
+.poem-sheet__footer--hidden {
+  opacity: 0;
+}
+
+.poem-sheet__footer--visible {
+  opacity: 1;
+  animation: poem-footer-fade-in 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .poem-sheet__footer p {
@@ -532,7 +557,7 @@ body {
 @keyframes sheet-nudge-from-left {
   from {
     opacity: 0.98;
-    transform: translate(-51.4%, -50%) rotate(-0.95deg);
+    transform: translate(-50.8%, -50%) rotate(-0.86deg);
   }
   to {
     opacity: 1;
@@ -543,11 +568,33 @@ body {
 @keyframes sheet-nudge-from-right {
   from {
     opacity: 0.98;
-    transform: translate(-48.6%, -50%) rotate(-0.55deg);
+    transform: translate(-49.2%, -50%) rotate(-0.64deg);
   }
   to {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(-0.75deg);
+  }
+}
+
+@keyframes poem-body-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(1.6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes poem-footer-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -642,6 +689,14 @@ body {
 
   .poem-sheet--nudge-from-left,
   .poem-sheet--nudge-from-right {
+    animation: none;
+  }
+
+  .poem-sheet__body--fade-in {
+    animation: none;
+  }
+
+  .poem-sheet__footer--visible {
     animation: none;
   }
 
