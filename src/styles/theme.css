@@ -338,9 +338,10 @@ body {
   height: min(80svh, 41rem);
   min-height: 31rem;
   padding: 32px;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0;
   overflow: hidden;
   border: 1px solid var(--paper-border);
   border-radius: 1px;
@@ -435,26 +436,38 @@ body {
   mix-blend-mode: multiply;
 }
 
-.poem-sheet__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
+.poem-sheet__intro {
+  margin: 0 0 1.5rem;
+  padding: 0;
 }
 
 .poem-sheet__title {
   margin: 0;
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 400;
   letter-spacing: -2px;
   color: var(--ink-strong);
+  -webkit-text-stroke: 0.7px currentColor;
+  paint-order: stroke fill;
+}
+
+.poem-sheet__author-row {
+  margin: 8px 0 0;
+}
+
+.poem-sheet__author {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--ink-soft);
 }
 
 .poem-sheet__approximate-date {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: #868686;
+  margin: 0.35rem 0 0;
+  font-size: 15px;
+  color: rgba(156, 152, 150, 1);
   letter-spacing: 0.02em;
   text-transform: none;
 }
@@ -466,8 +479,8 @@ body {
 
 .poem-sheet__body {
   white-space: pre-wrap;
-  font-size: 1.03rem;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   line-height: 1.65;
   letter-spacing: 0.005em;
   color: var(--ink-soft);
@@ -484,8 +497,8 @@ body {
 }
 
 .poem-sheet__scrollable {
-  height: 100%;
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: scroll;
   scroll-behavior: smooth;
   scrollbar-width: thin;
@@ -520,10 +533,10 @@ body {
   display: grid;
   gap: 0.2rem;
   margin-top: 1.65rem;
-  font-size: 1rem;
+  font-size: 15px;
 }
 
-.poem-sheet__footer--placeholder {
+.poem-sheet__pending-body-animation {
   visibility: hidden;
 }
 
@@ -851,7 +864,7 @@ body {
   }
 
   .poem-sheet__body {
-    font-size: 0.97rem;
+    font-size: 15px;
     line-height: 1.6;
   }
 
@@ -916,7 +929,7 @@ body {
     filter: none;
   }
 
-  .poem-sheet__footer--placeholder {
+  .poem-sheet__pending-body-animation {
     visibility: visible;
   }
 

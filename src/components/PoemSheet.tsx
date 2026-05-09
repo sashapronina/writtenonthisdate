@@ -102,50 +102,28 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
     ))
   }
 
-  if (!poem) {
-    return (
-      <article className={sheetClassName} aria-live="polite">
-        <header className="poem-sheet__header">
-          <h1 className="poem-sheet__title">{placeholderPoem.title}</h1>
-          {placeholderPoem.approximateDate ? (
-            <span className="poem-sheet__approximate-date">Approximate date</span>
-          ) : null}
-        </header>
-        <div className="poem-sheet__scrollable">
-          <div
-            key={bodyAnimationKey}
-            className="poem-sheet__body"
-            aria-label={bodyText}
-          >
-            {renderAnimatedText(bodyText)}
-          </div>
-          <footer
-            key={`footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`}
-            className={`poem-sheet__footer${
-              isAnimationComplete ? '' : ' poem-sheet__footer--placeholder'
-            }`}
-          >
-            <p aria-label={placeholderPoem.author}>
-              {renderAnimatedText(placeholderPoem.author)}
-            </p>
-            <p aria-label={dateLabel}>{renderAnimatedText(dateLabel)}</p>
-          </footer>
-        </div>
-      </article>
-    )
-  }
+  const title = poem?.title ?? placeholderPoem.title
+  const author = poem?.author ?? placeholderPoem.author
+  const showApproximate =
+    poem?.approximateDate ?? (!poem && placeholderPoem.approximateDate)
+  const footerDateText = poem
+    ? `${dateLabel}${poem.year ? `, ${poem.year}` : ''}`
+    : dateLabel
 
-  const footerDateText = `${dateLabel}${poem.year ? `, ${poem.year}` : ''}`
+  const pendingFooterClass = !isAnimationComplete ? ' poem-sheet__pending-body-animation' : ''
+  const footerKey = `footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`
 
   return (
     <article className={sheetClassName} aria-live="polite">
-      <header className="poem-sheet__header">
-        <h1 className="poem-sheet__title">{poem.title}</h1>
-        {poem.approximateDate ? (
-          <span className="poem-sheet__approximate-date">Approximate date</span>
-        ) : null}
-      </header>
       <div className="poem-sheet__scrollable">
+        <header className="poem-sheet__intro">
+          <h1 className="poem-sheet__title">{title}</h1>
+          <div key={`author-${bodyAnimationKey}`} className="poem-sheet__author-row">
+            <p className="poem-sheet__author" aria-label={author}>
+              {renderAnimatedText(author)}
+            </p>
+          </div>
+        </header>
         <div
           key={bodyAnimationKey}
           className="poem-sheet__body"
@@ -153,14 +131,13 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
         >
           {renderAnimatedText(bodyText)}
         </div>
-        <footer
-          key={`footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`}
-          className={`poem-sheet__footer${
-            isAnimationComplete ? '' : ' poem-sheet__footer--placeholder'
-          }`}
-        >
-          <p aria-label={poem.author}>{renderAnimatedText(poem.author)}</p>
+        <footer key={footerKey} className={`poem-sheet__footer${pendingFooterClass}`}>
           <p aria-label={footerDateText}>{renderAnimatedText(footerDateText)}</p>
+          {showApproximate ? (
+            <p className="poem-sheet__approximate-date" aria-label="Approximate date">
+              {renderAnimatedText('Approximate date')}
+            </p>
+          ) : null}
         </footer>
       </div>
     </article>
