@@ -364,7 +364,7 @@ body {
   backdrop-filter: blur(0.75px) saturate(1.02) brightness(1.025);
   -webkit-backdrop-filter: blur(0.75px) saturate(1.02) brightness(1.025);
   box-shadow: none;
-  transform: rotate(-0.75deg);
+  transform: rotate(var(--poem-sheet-tilt, -0.75deg));
   animation: sheet-settle 650ms ease-out both;
 }
 
@@ -614,6 +614,15 @@ body {
   background: rgb(176 176 176 / 92%);
 }
 
+.day-stepper__btn--next-blocked {
+  cursor: pointer;
+  background: rgb(176 176 176 / 92%);
+}
+
+.day-stepper__btn--next-blocked:hover {
+  background: rgb(176 176 176 / 92%);
+}
+
 .day-stepper__btn:active {
   transform: translateY(-50%) scale(0.97);
 }
@@ -754,36 +763,47 @@ body {
   }
 }
 
-@keyframes sheet-settle {
+@keyframes poem-focus-settle-mobile {
   from {
     opacity: 0;
-    transform: translateY(1.25%) rotate(-1.4deg);
+    transform: translateY(-48%);
   }
   to {
     opacity: 1;
-    transform: translateY(0) rotate(-0.75deg);
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes sheet-settle {
+  from {
+    opacity: 0;
+    transform: translateY(1.25%) rotate(calc(var(--poem-sheet-tilt, -0.75deg) - 0.65deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--poem-sheet-tilt, -0.75deg));
   }
 }
 
 @keyframes sheet-nudge-from-left {
   from {
     opacity: 0.98;
-    transform: translateX(-0.38rem) rotate(-0.86deg);
+    transform: translateX(-0.38rem) rotate(calc(var(--poem-sheet-tilt, -0.75deg) - 0.11deg));
   }
   to {
     opacity: 1;
-    transform: translateX(0) rotate(-0.75deg);
+    transform: translateX(0) rotate(var(--poem-sheet-tilt, -0.75deg));
   }
 }
 
 @keyframes sheet-nudge-from-right {
   from {
     opacity: 0.98;
-    transform: translateX(0.38rem) rotate(-0.64deg);
+    transform: translateX(0.38rem) rotate(calc(var(--poem-sheet-tilt, -0.75deg) + 0.11deg));
   }
   to {
     opacity: 1;
-    transform: translateX(0) rotate(-0.75deg);
+    transform: translateX(0) rotate(var(--poem-sheet-tilt, -0.75deg));
   }
 }
 
@@ -799,8 +819,13 @@ body {
 }
 
 @media (max-width: 800px) {
+  /* Shared horizontal inset from the viewport: poem + decorative paper use the same width math as the day stepper so edges line up (85vw ignored the bar’s padding). */
   .scene {
-    padding-block-start: max(1rem, env(safe-area-inset-top, 0px));
+    --mobile-inline-gutter: 8px;
+    padding: max(var(--mobile-inline-gutter), env(safe-area-inset-top, 0px))
+      max(var(--mobile-inline-gutter), env(safe-area-inset-right, 0px))
+      max(var(--mobile-inline-gutter), env(safe-area-inset-bottom, 0px))
+      max(var(--mobile-inline-gutter), env(safe-area-inset-left, 0px));
   }
 
   .scene__header {
@@ -808,7 +833,7 @@ body {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: min(calc(100vw - 1.5rem), 24rem);
+    width: min(calc(100vw - 2 * var(--mobile-inline-gutter)), 24rem);
     display: flex;
     justify-content: center;
     pointer-events: none;
@@ -835,24 +860,54 @@ body {
     --poem-focus-shift-x: 0px;
   }
 
-  .paper-stack__sheet--right {
+  .paper-stack {
     display: none;
   }
 
-  .paper-stack__sheet--left {
-    transform: translate(-50%, -50%) rotate(2.2deg);
+  .poem-focus.poem-focus--mobile {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    transform: translateY(-50%);
+    animation: poem-focus-settle-mobile 650ms ease-out both;
   }
 
-  .paper-stack__sheet--left .paper-stack__placeholder {
-    color: rgba(40, 38, 35, 0.3);
-    opacity: 0.88;
-    filter: blur(0.85px);
+  .poem-carousel__viewport {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    overflow: visible;
+    touch-action: pan-y;
+  }
+
+  .poem-carousel__nudge {
+    display: flex;
+    will-change: transform;
+  }
+
+  .poem-carousel__track {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
+    will-change: transform;
+  }
+
+  .poem-carousel__cell {
+    flex-shrink: 0;
+    width: min(31rem, calc(100vw - 2 * var(--mobile-inline-gutter)));
+  }
+
+  .poem-carousel__cell .poem-sheet {
+    width: 100%;
   }
 
   .poem-sheet {
-    height: min(74svh, 39rem);
-    min-height: 66svh;
-    padding: 1.15rem;
+    width: min(31rem, calc(100vw - 2 * var(--mobile-inline-gutter)));
+    height: min(90svh, 56rem);
+    min-height: min(82svh, 48rem);
+    padding: 32px;
   }
 
   .poem-sheet__body {
@@ -861,56 +916,96 @@ body {
   }
 
   .day-stepper {
-    inset: auto 0 0 0;
-    top: auto;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 0.55rem;
-    padding: 0.65rem max(0.65rem, env(safe-area-inset-left, 0px))
-      calc(0.75rem + env(safe-area-inset-bottom, 0px))
-      max(0.65rem, env(safe-area-inset-right, 0px));
-    pointer-events: auto;
+    inset: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
   }
 
   .day-stepper__btn {
-    position: relative;
-    top: auto;
-    flex: 1;
-    min-height: 2.85rem;
-    padding: 0.7rem 0.75rem;
-    transform: none;
-    border-radius: 6px;
-    font-size: 0.84rem;
+    position: absolute;
+    top: 50%;
+    flex: unset;
+    width: 2.35rem;
+    min-width: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    transform: translateY(-50%);
+    pointer-events: auto;
   }
 
   .day-stepper__btn:active {
-    transform: scale(0.98);
+    transform: translateY(-50%) scale(0.97);
   }
 
   .day-stepper__btn--prev {
-    left: auto;
+    left: max(
+      0.35rem,
+      calc(
+        50% - min(31rem, calc(100vw - 2 * var(--mobile-inline-gutter))) / 2 - 3.15rem
+      )
+    );
     right: auto;
     justify-content: center;
   }
 
   .day-stepper__btn--next {
+    right: max(
+      0.35rem,
+      calc(
+        50% - min(31rem, calc(100vw - 2 * var(--mobile-inline-gutter))) / 2 - 3.15rem
+      )
+    );
     left: auto;
-    right: auto;
     justify-content: center;
   }
 
   .day-stepper__label {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .paperclips {
+    display: none;
+  }
+}
+
+.app-toast {
+  position: fixed;
+  z-index: 60;
+  left: max(0.65rem, env(safe-area-inset-left, 0px));
+  right: max(0.65rem, env(safe-area-inset-right, 0px));
+  bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.app-toast__text {
+  margin: 0 auto;
+  max-width: 26rem;
+  padding: 0.72rem 0.95rem;
+  border-radius: 10px;
+  background: rgba(42, 42, 42, 0.94);
+  color: #fafafa;
+  font-family: var(--font-typewriter);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (min-width: 801px) {
+  .app-toast {
     display: none;
   }
 }
@@ -921,6 +1016,10 @@ body {
   }
 
   .poem-focus {
+    animation: none;
+  }
+
+  .poem-focus.poem-focus--mobile {
     animation: none;
   }
 

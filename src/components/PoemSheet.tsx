@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Poem } from '../lib/poems'
 
 type PoemSheetProps = {
   poem?: Poem
   dateLabel: string
   className?: string
+  /** Sets `--poem-sheet-tilt` (e.g. mobile per-day variety). Omit to use theme default. */
+  tiltDeg?: number
 }
 
 const placeholderPoem: Pick<Poem, 'title' | 'author' | 'body' | 'approximateDate'> = {
@@ -35,7 +37,7 @@ const TOTAL_FADE_DURATION_MS = 7500
 const MIN_STAGGER_MS = 6
 const MAX_STAGGER_MS = 55
 
-export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
+export function PoemSheet({ poem, dateLabel, className, tiltDeg }: PoemSheetProps) {
   const bodyText = poem?.body ?? placeholderPoem.body
   const [bodyAnimationKey, setBodyAnimationKey] = useState(0)
   const [isAnimationComplete, setIsAnimationComplete] = useState(true)
@@ -113,8 +115,13 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
   const pendingFooterClass = !isAnimationComplete ? ' poem-sheet__pending-body-animation' : ''
   const footerKey = `footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`
 
+  const tiltStyle: CSSProperties | undefined =
+    tiltDeg !== undefined
+      ? ({ '--poem-sheet-tilt': `${tiltDeg}deg` } as CSSProperties)
+      : undefined
+
   return (
-    <article className={sheetClassName} aria-live="polite">
+    <article className={sheetClassName} style={tiltStyle} aria-live="polite">
       <div className="poem-sheet__scrollable">
         <header className="poem-sheet__intro">
           <h1 className="poem-sheet__title">{title}</h1>

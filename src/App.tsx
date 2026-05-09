@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import { AuthorPortrait } from './components/AuthorPortrait'
 import { DayStepper } from './components/DayStepper'
 import { LightOverlay } from './components/LightOverlay'
 import { PoemSheet } from './components/PoemSheet'
-import { formatDisplayDate, shiftByDays, toDateKey } from './lib/date'
+import { Toast } from './components/Toast'
+import { formatDisplayDate, mobilePoemSheetTiltDeg, shiftByDays, toDateKey } from './lib/date'
 import { buildPoemsByDayKey, getAllPoems } from './lib/poems'
 
 type LightingMode = 'sunlit' | 'figma'
@@ -17,12 +26,37 @@ function getLightingModeFromUrl(): LightingMode {
 const SWIPE_NAV_RATIO = 1.12
 const SWIPE_ARM_PX = 14
 
+const MOBILE_LAYOUT_MQ = '(max-width: 800px)'
+const FUTURE_DAY_TOAST =
+  'Come back tomorrow. Poems are released on the day. But you can go back into the archive of the previous days.'
+
+function useMobileLayout() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_LAYOUT_MQ).matches,
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_LAYOUT_MQ)
+    const onChange = () => setIsMobile(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  return isMobile
+}
+
 function App() {
   const [cursorDate, setCursorDate] = useState(() => new Date())
   const [pageMotion, setPageMotion] = useState<'from-left' | 'from-right' | null>(null)
   const [lightingMode, setLightingMode] = useState<LightingMode>(() => getLightingModeFromUrl())
   const [swipePx, setSwipePx] = useState(0)
   const swipePxRef = useRef(0)
+  const isMobileLayout = useMobileLayout()
+  const [toastOpen, setToastOpen] = useState(false)
+  const [carouselNudge, setCarouselNudge] = useState(0)
+  const carouselTrackRef = useRef<HTMLDivElement>(null)
+  const currentSheetWrapRef = useRef<HTMLDivElement>(null)
   const swipeDragRef = useRef<{
     pointerId: number
     startX: number
@@ -59,6 +93,49 @@ function App() {
   const activePoem = poemsForDay[0]
   const canGoPrevious = cursorDate > oldestArchiveDate
   const canGoNext = cursorDate < today
+
+  const prevDate = useMemo(
+    () => (canGoPrevious ? shiftByDays(cursorDate, -1) : null),
+    [canGoPrevious, cursorDate],
+  )
+  const nextDate = useMemo(
+    () => (canGoNext ? shiftByDays(cursorDate, 1) : null),
+    [canGoNext, cursorDate],
+  )
+  const prevPoem = prevDate ? (poemsByDayKey.get(toDateKey(prevDate)) ?? [])[0] : undefined
+  const nextPoem = nextDate ? (poemsByDayKey.get(toDateKey(nextDate)) ?? [])[0] : undefined
+  const prevLabel = prevDate ? formatDisplayDate(prevDate) : ''
+  const nextLabel = nextDate ? formatDisplayDate(nextDate) : ''
+
+  const closeToast = useCallback(() => setToastOpen(false), [])
+
+  useLayoutEffect(() => {
+    if (!isMobileLayout) {
+      setCarouselNudge(0)
+      return
+    }
+
+    const track = carouselTrackRef.current
+    const cur = currentSheetWrapRef.current
+    if (!track || !cur) return
+
+    const measure = () => {
+      if (swipePxRef.current !== 0) return
+      const rect = cur.getBoundingClientRect()
+      const center = rect.left + rect.width / 2
+      const target = window.innerWidth / 2
+      setCarouselNudge((prev) => prev + (target - center))
+    }
+
+    measure()
+    const ro = new ResizeObserver(() => measure())
+    ro.observe(track)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [isMobileLayout, cursorDate, canGoPrevious, canGoNext, activePoem])
 
   const goPreviousDay = () => {
     setPageMotion('from-left')
@@ -208,12 +285,15 @@ function App() {
       </div>
 
       <div
-        className={
-          activePoem?.portraitUrl ? 'poem-focus poem-focus--with-portrait' : 'poem-focus'
-        }
+        className={[
+          activePoem?.portraitUrl ? 'poem-focus poem-focus--with-portrait' : 'poem-focus',
+          isMobileLayout ? 'poem-focus--mobile' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={
           {
-            '--poem-swipe-x': `${swipePx}px`,
+            '--poem-swipe-x': isMobileLayout ? '0px' : `${swipePx}px`,
           } as CSSProperties
         }
         onPointerDown={(e) => {
@@ -283,21 +363,79 @@ function App() {
           setSwipePx(0)
         }}
       >
-        <PoemSheet
-          key={toDateKey(cursorDate)}
-          poem={activePoem}
-          dateLabel={dateLabel}
-          className={
-            pageMotion === 'from-left'
-              ? 'poem-sheet--nudge-from-left'
-              : pageMotion === 'from-right'
-                ? 'poem-sheet--nudge-from-right'
-                : undefined
-          }
-        />
-        {activePoem?.portraitUrl ? (
-          <AuthorPortrait author={activePoem.author} imageUrl={activePoem.portraitUrl} />
-        ) : null}
+        {isMobileLayout ? (
+          <div className="poem-carousel__viewport">
+            <div
+              className="poem-carousel__nudge"
+              style={{ transform: `translateX(${carouselNudge}px)` }}
+            >
+              <div
+                ref={carouselTrackRef}
+                className="poem-carousel__track"
+                style={{ transform: `translateX(${swipePx}px)` }}
+              >
+                {canGoPrevious && prevDate ? (
+                  <div className="poem-carousel__cell" aria-hidden="true">
+                    <PoemSheet
+                      key={toDateKey(prevDate)}
+                      poem={prevPoem}
+                      dateLabel={prevLabel}
+                      className="poem-sheet--carousel-peer"
+                      tiltDeg={mobilePoemSheetTiltDeg(prevDate)}
+                    />
+                  </div>
+                ) : null}
+                <div
+                  ref={currentSheetWrapRef}
+                  className="poem-carousel__cell poem-carousel__cell--current"
+                >
+                  <PoemSheet
+                    key={toDateKey(cursorDate)}
+                    poem={activePoem}
+                    dateLabel={dateLabel}
+                    tiltDeg={mobilePoemSheetTiltDeg(cursorDate)}
+                    className={
+                      pageMotion === 'from-left'
+                        ? 'poem-sheet--nudge-from-left'
+                        : pageMotion === 'from-right'
+                          ? 'poem-sheet--nudge-from-right'
+                          : undefined
+                    }
+                  />
+                </div>
+                {canGoNext && nextDate ? (
+                  <div className="poem-carousel__cell" aria-hidden="true">
+                    <PoemSheet
+                      key={toDateKey(nextDate)}
+                      poem={nextPoem}
+                      dateLabel={nextLabel}
+                      className="poem-sheet--carousel-peer"
+                      tiltDeg={mobilePoemSheetTiltDeg(nextDate)}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <PoemSheet
+              key={toDateKey(cursorDate)}
+              poem={activePoem}
+              dateLabel={dateLabel}
+              className={
+                pageMotion === 'from-left'
+                  ? 'poem-sheet--nudge-from-left'
+                  : pageMotion === 'from-right'
+                    ? 'poem-sheet--nudge-from-right'
+                    : undefined
+              }
+            />
+            {activePoem?.portraitUrl ? (
+              <AuthorPortrait author={activePoem.author} imageUrl={activePoem.portraitUrl} />
+            ) : null}
+          </>
+        )}
       </div>
 
       <div className="paperclips" aria-hidden="true">
@@ -316,8 +454,16 @@ function App() {
       <DayStepper
         onPreviousDay={goPreviousDay}
         onNextDay={goNextDay}
+        useInteractiveNextBlock={isMobileLayout}
+        onNextBlocked={() => setToastOpen(true)}
         canGoPrevious={canGoPrevious}
         canGoNext={canGoNext}
+      />
+
+      <Toast
+        message={FUTURE_DAY_TOAST}
+        open={toastOpen && isMobileLayout}
+        onClose={closeToast}
       />
     </main>
   )
