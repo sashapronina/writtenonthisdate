@@ -12,7 +12,13 @@ import { DayStepper } from './components/DayStepper'
 import { LightOverlay } from './components/LightOverlay'
 import { PoemSheet } from './components/PoemSheet'
 import { Toast } from './components/Toast'
-import { formatDisplayDate, mobilePoemSheetTiltDeg, shiftByDays, toDateKey } from './lib/date'
+import {
+  formatDisplayDate,
+  mobilePoemSheetTiltDeg,
+  shiftByDays,
+  startOfLocalDay,
+  toDateKey,
+} from './lib/date'
 import { buildPoemsByDayKey, getAllPoems } from './lib/poems'
 
 type LightingMode = 'sunlit' | 'figma'
@@ -76,12 +82,10 @@ function App() {
       window.removeEventListener('popstate', syncModeFromUrl)
     }
   }, [])
-  const today = useMemo(() => new Date(), [])
-  const oldestArchiveDate = useMemo(
-    () => new Date(today.getFullYear(), 0, 1),
-    [today],
-  )
   const poemsByDayKey = useMemo(() => buildPoemsByDayKey(getAllPoems()), [])
+  const now = new Date()
+  const todayStart = startOfLocalDay(now)
+  const oldestArchiveStart = startOfLocalDay(new Date(now.getFullYear(), 0, 1))
   const dateLabel = formatDisplayDate(cursorDate)
   const monthLabel = cursorDate
     .toLocaleString('en-US', { month: 'short' })
@@ -91,8 +95,9 @@ function App() {
   const dayLabel = cursorDate.getDate()
   const poemsForDay = poemsByDayKey.get(toDateKey(cursorDate)) ?? []
   const activePoem = poemsForDay[0]
-  const canGoPrevious = cursorDate > oldestArchiveDate
-  const canGoNext = cursorDate < today
+  const cursorStart = startOfLocalDay(cursorDate)
+  const canGoPrevious = cursorStart.getTime() > oldestArchiveStart.getTime()
+  const canGoNext = cursorStart.getTime() < todayStart.getTime()
 
   const prevDate = useMemo(
     () => (canGoPrevious ? shiftByDays(cursorDate, -1) : null),
@@ -140,7 +145,7 @@ function App() {
   const goPreviousDay = () => {
     setPageMotion('from-left')
     setCursorDate((current) => {
-      if (current <= oldestArchiveDate) return current
+      if (startOfLocalDay(current).getTime() <= oldestArchiveStart.getTime()) return current
       return shiftByDays(current, -1)
     })
   }
@@ -148,7 +153,7 @@ function App() {
   const goNextDay = () => {
     setPageMotion('from-right')
     setCursorDate((current) => {
-      if (current >= today) return current
+      if (startOfLocalDay(current).getTime() >= startOfLocalDay(new Date()).getTime()) return current
       return shiftByDays(current, 1)
     })
   }

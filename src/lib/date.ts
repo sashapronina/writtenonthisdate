@@ -12,6 +12,11 @@ export function shiftByDays(date: Date, delta: number): Date {
   return next
 }
 
+/** Local midnight for the calendar day of `date` — use when comparing “which day” instead of clock time. */
+export function startOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
 export function formatDisplayDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
