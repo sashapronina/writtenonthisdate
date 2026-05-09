@@ -605,6 +605,83 @@ body {
   right: max(1rem, calc(50% - min(31rem, 85vw) / 2 - 4.7rem));
 }
 
+/* Next-day control: host matches button footprint; tooltip is absolutely positioned above. */
+.stepper-host {
+  position: absolute;
+  top: 50%;
+  z-index: 8;
+  width: 2.35rem;
+  height: 2.35rem;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+/* Invisible layer so hover stays active over the tooltip (out-of-flow) without shifting the button. */
+.stepper-host__hover-catcher {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(14rem, calc(100vw - 2rem));
+  top: -6rem;
+  pointer-events: auto;
+}
+
+/* When the button is disabled, hovers would hit the poem sheet under it without this layer. */
+.stepper-host__btn-wrap {
+  position: relative;
+  z-index: 2;
+  width: 2.35rem;
+  height: 2.35rem;
+}
+
+.stepper-host__btn-wrap:has(.stepper--nested:disabled)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
+.stepper-host__tooltip {
+  display: block;
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: calc(100% + 0.45rem);
+  width: max-content;
+  max-width: min(14rem, calc(100vw - 2rem));
+  padding: 0.45rem 0.55rem;
+  border-radius: 4px;
+  font-family: var(--font-typewriter);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #f3f3f3;
+  background: rgba(8, 8, 8, 0.92);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  text-align: left;
+  pointer-events: none;
+}
+
+.stepper-host--right {
+  right: max(1rem, calc(50% - min(31rem, 85vw) / 2 - 4.7rem));
+}
+
+.stepper-host__btn-wrap .stepper--nested {
+  position: static;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.stepper-host__btn-wrap .stepper--nested:active {
+  transform: scale(0.95);
+}
+
 .paperclips {
   position: absolute;
   bottom: 4rem;
@@ -796,6 +873,20 @@ body {
     right: calc(50% - 3.1rem);
   }
 
+  .stepper-host {
+    top: auto;
+    bottom: 1rem;
+    transform: none;
+  }
+
+  .stepper-host--right {
+    right: calc(50% - 3.1rem);
+  }
+
+  .stepper-host__btn-wrap .stepper--nested:active {
+    transform: scale(0.95);
+  }
+
   .paperclips {
     display: none;
   }
@@ -830,7 +921,9 @@ body {
   }
 
   .stepper,
-  .stepper:active {
+  .stepper:active,
+  .stepper-host__btn-wrap .stepper--nested,
+  .stepper-host__btn-wrap .stepper--nested:active {
     transition: none;
     transform: none;
   }
