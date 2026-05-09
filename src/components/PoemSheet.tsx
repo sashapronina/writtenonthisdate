@@ -8,11 +8,11 @@ type PoemSheetProps = {
 }
 
 const placeholderPoem: Pick<Poem, 'title' | 'author' | 'body' | 'approximateDate'> = {
-  title: 'Untitled (placeholder)',
-  author: 'Archive placeholder',
+  title: 'Untitled',
+  author: 'Archive',
   approximateDate: true,
   body:
-    "We don't have all the poems just yet, but we will. While we work on collecting poems that have an exact date, take a moment to appreciate Derek Walcott's Love after Love. Written in 1976 without an exact date\n\n" +
+    "While we work on collecting poems that have an exact date, take a moment to appreciate Derek Walcott's Love after Love, written in 1976\n\n" +
     'The time will come\n' +
     'when, with elation,\n' +
     'you will greet yourself arriving\n' +

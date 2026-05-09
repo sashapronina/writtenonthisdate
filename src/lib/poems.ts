@@ -11,6 +11,8 @@ export type Poem = {
   year?: number
   approximateDate?: boolean
   source?: string
+  /** Hotlinked portrait (e.g. Wikimedia Commons `upload.wikimedia.org` URL). */
+  portraitUrl?: string
 }
 
 export function getAllPoems(): Poem[] {

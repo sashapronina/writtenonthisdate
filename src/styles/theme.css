@@ -64,7 +64,7 @@ body {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background-image: url('/noise.svg');
+  background-image: var(--noise-svg-url);
   background-size: 180px 180px;
   opacity: 0.08;
   mix-blend-mode: multiply;
@@ -153,7 +153,7 @@ body {
   border-radius: 1px;
   border: 1px solid var(--paper-border);
   font-family: var(--font-calendar-header);
-  background: var(--scene-header-card-bg);
+  background: rgba(255, 255, 255, 0.2);
   line-height: normal;
   text-align: center;
   transform: rotate(-5.5deg);
@@ -225,7 +225,7 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: url('/noise.svg');
+  background-image: var(--noise-svg-url);
   background-size: 130px 130px;
   opacity: 0.065;
   mix-blend-mode: multiply;
@@ -285,7 +285,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url('/noise.svg');
+  background-image: var(--noise-svg-url);
   background-size: 150px 150px;
   opacity: 0.065;
   mix-blend-mode: multiply;
@@ -311,15 +311,33 @@ body {
   }
 }
 
-.poem-sheet {
+.poem-focus {
+  --poem-focus-shift-x: 0px;
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 5;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: clamp(2.85rem, 6.5vw, 5.25rem);
+  transform: translate(calc(-50% + var(--poem-focus-shift-x)), -50%);
+  animation: poem-focus-settle 650ms ease-out both;
+}
+
+/* Nudge the row right so the poem sheet stays near viewport center while the portrait sits in open margin (ref. design). */
+.poem-focus--with-portrait {
+  --poem-focus-shift-x: clamp(4.25rem, 9.5vw, 8.5rem);
+}
+
+.poem-sheet {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
   width: min(31rem, 85vw);
   height: min(80svh, 41rem);
   min-height: 31rem;
-  padding: 1.5rem;
+  padding: 32px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.5rem;
@@ -340,8 +358,62 @@ body {
   backdrop-filter: blur(0.75px) saturate(1.02) brightness(1.025);
   -webkit-backdrop-filter: blur(0.75px) saturate(1.02) brightness(1.025);
   box-shadow: none;
-  transform: translate(-50%, -50%) rotate(-0.75deg);
+  transform: rotate(-0.75deg);
   animation: sheet-settle 650ms ease-out both;
+}
+
+.author-portrait {
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 140px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.55rem 0.6rem 0.55rem;
+  border-radius: 4px;
+  background: rgba(252, 253, 254, 0.6);
+  /* translateX before rotate: shifts the painted card right in screen space so the tilt does not overlap the poem sheet */
+  transform: translateX(clamp(2.15rem, 4.8vw, 3.65rem)) rotate(4deg);
+  box-shadow: 0 1px 2px rgba(26, 25, 23, 0.06);
+  margin-top: clamp(1.65rem, 5.5vmin, 2.85rem);
+  margin-inline-start: clamp(1.15rem, 3vw, 2.35rem);
+  pointer-events: none;
+  user-select: none;
+}
+
+.author-portrait__frame {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #141312;
+}
+
+.author-portrait__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 18%;
+}
+
+.author-portrait__caption {
+  margin: 0;
+  flex-shrink: 0;
+  max-width: 100%;
+  font-family: var(--font-typewriter);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-align: center;
+  white-space: normal;
 }
 
 .poem-sheet--nudge-from-left {
@@ -357,7 +429,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url('/noise.svg');
+  background-image: var(--noise-svg-url);
   background-size: 130px 130px;
   opacity: 0.065;
   mix-blend-mode: multiply;
@@ -491,7 +563,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url('/noise.svg');
+  background-image: var(--noise-svg-url);
   background-size: 90px 90px;
   opacity: 0.14;
   mix-blend-mode: soft-light;
@@ -580,7 +652,7 @@ body {
   transform: translate(-50%, -50%);
   transform-origin: center center;
   will-change: transform;
-  animation: light-drift 30s ease-in-out infinite alternate;
+  animation: light-drift 22s ease-in-out infinite alternate;
 }
 
 .light-overlay__image--figma {
@@ -607,36 +679,47 @@ body {
   }
 }
 
-@keyframes sheet-settle {
+@keyframes poem-focus-settle {
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) rotate(-1.4deg);
+    transform: translate(calc(-50% + var(--poem-focus-shift-x, 0px)), -48%);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(-0.75deg);
+    transform: translate(calc(-50% + var(--poem-focus-shift-x, 0px)), -50%);
+  }
+}
+
+@keyframes sheet-settle {
+  from {
+    opacity: 0;
+    transform: translateY(1.25%) rotate(-1.4deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-0.75deg);
   }
 }
 
 @keyframes sheet-nudge-from-left {
   from {
     opacity: 0.98;
-    transform: translate(-50.8%, -50%) rotate(-0.86deg);
+    transform: translateX(-0.38rem) rotate(-0.86deg);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(-0.75deg);
+    transform: translateX(0) rotate(-0.75deg);
   }
 }
 
 @keyframes sheet-nudge-from-right {
   from {
     opacity: 0.98;
-    transform: translate(-49.2%, -50%) rotate(-0.64deg);
+    transform: translateX(0.38rem) rotate(-0.64deg);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(-0.75deg);
+    transform: translateX(0) rotate(-0.75deg);
   }
 }
 
@@ -676,6 +759,14 @@ body {
     display: none;
   }
 
+  .author-portrait {
+    display: none;
+  }
+
+  .poem-focus {
+    gap: 0;
+  }
+
   .poem-sheet {
     height: min(74svh, 39rem);
     min-height: 66svh;
@@ -712,6 +803,10 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .light-overlay__image {
+    animation: none;
+  }
+
+  .poem-focus {
     animation: none;
   }
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { AuthorPortrait } from './components/AuthorPortrait'
 import { DayStepper } from './components/DayStepper'
 import { LightOverlay } from './components/LightOverlay'
 import { PoemSheet } from './components/PoemSheet'
@@ -179,22 +180,39 @@ function App() {
         </div>
       </div>
 
-      <PoemSheet
-        key={toDateKey(cursorDate)}
-        poem={activePoem}
-        dateLabel={dateLabel}
+      <div
         className={
-          pageMotion === 'from-left'
-            ? 'poem-sheet--nudge-from-left'
-            : pageMotion === 'from-right'
-              ? 'poem-sheet--nudge-from-right'
-              : undefined
+          activePoem?.portraitUrl ? 'poem-focus poem-focus--with-portrait' : 'poem-focus'
         }
-      />
+      >
+        <PoemSheet
+          key={toDateKey(cursorDate)}
+          poem={activePoem}
+          dateLabel={dateLabel}
+          className={
+            pageMotion === 'from-left'
+              ? 'poem-sheet--nudge-from-left'
+              : pageMotion === 'from-right'
+                ? 'poem-sheet--nudge-from-right'
+                : undefined
+          }
+        />
+        {activePoem?.portraitUrl ? (
+          <AuthorPortrait author={activePoem.author} imageUrl={activePoem.portraitUrl} />
+        ) : null}
+      </div>
 
       <div className="paperclips" aria-hidden="true">
-        <img className="paperclips__clip paperclips__clip--top" src="./paperclip.png" alt="" />
-        <img className="paperclips__clip paperclips__clip--bottom" src="./paperclip.png" alt="" />
+        <img
+          className="paperclips__clip paperclips__clip--top"
+          src={`${import.meta.env.BASE_URL}paperclip.png`}
+          alt=""
+        />
+        <img
+          className="paperclips__clip paperclips__clip--bottom"
+          src={`${import.meta.env.BASE_URL}paperclip.png`}
+          alt=""
+        />
       </div>
 
       <DayStepper
