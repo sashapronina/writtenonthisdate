@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AuthorPortrait } from './components/AuthorPortrait'
 import { DayStepper } from './components/DayStepper'
 import { LightOverlay } from './components/LightOverlay'
@@ -14,10 +14,21 @@ function getLightingModeFromUrl(): LightingMode {
   return rawMode === 'sunlit' ? 'sunlit' : 'figma'
 }
 
+const SWIPE_NAV_RATIO = 1.12
+const SWIPE_ARM_PX = 14
+
 function App() {
   const [cursorDate, setCursorDate] = useState(() => new Date())
   const [pageMotion, setPageMotion] = useState<'from-left' | 'from-right' | null>(null)
   const [lightingMode, setLightingMode] = useState<LightingMode>(() => getLightingModeFromUrl())
+  const [swipePx, setSwipePx] = useState(0)
+  const swipePxRef = useRef(0)
+  const swipeDragRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    horizontal: boolean | null
+  } | null>(null)
 
   useEffect(() => {
     const syncModeFromUrl = () => {
@@ -48,6 +59,22 @@ function App() {
   const activePoem = poemsForDay[0]
   const canGoPrevious = cursorDate > oldestArchiveDate
   const canGoNext = cursorDate < today
+
+  const goPreviousDay = () => {
+    setPageMotion('from-left')
+    setCursorDate((current) => {
+      if (current <= oldestArchiveDate) return current
+      return shiftByDays(current, -1)
+    })
+  }
+
+  const goNextDay = () => {
+    setPageMotion('from-right')
+    setCursorDate((current) => {
+      if (current >= today) return current
+      return shiftByDays(current, 1)
+    })
+  }
 
   return (
     <main className="scene">
@@ -184,6 +211,77 @@ function App() {
         className={
           activePoem?.portraitUrl ? 'poem-focus poem-focus--with-portrait' : 'poem-focus'
         }
+        style={
+          {
+            '--poem-swipe-x': `${swipePx}px`,
+          } as CSSProperties
+        }
+        onPointerDown={(e) => {
+          if (e.button !== 0) return
+          swipeDragRef.current = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            horizontal: null,
+          }
+        }}
+        onPointerMove={(e) => {
+          const drag = swipeDragRef.current
+          if (!drag || drag.pointerId !== e.pointerId) return
+
+          const dx = e.clientX - drag.startX
+          const dy = e.clientY - drag.startY
+
+          if (drag.horizontal === null) {
+            if (Math.abs(dx) < SWIPE_ARM_PX && Math.abs(dy) < SWIPE_ARM_PX) return
+            if (Math.abs(dy) > Math.abs(dx) * SWIPE_NAV_RATIO) {
+              swipeDragRef.current = null
+              return
+            }
+            drag.horizontal = true
+            ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+          }
+
+          if (!drag.horizontal) return
+
+          e.preventDefault()
+          let x = dx
+          if (dx > 0 && !canGoPrevious) x = dx * 0.22
+          if (dx < 0 && !canGoNext) x = dx * 0.22
+          swipePxRef.current = x
+          setSwipePx(x)
+        }}
+        onPointerUp={(e) => {
+          const drag = swipeDragRef.current
+          if (!drag || drag.pointerId !== e.pointerId) return
+          swipeDragRef.current = null
+          try {
+            ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+          } catch {
+            /* already released */
+          }
+
+          const endedX = swipePxRef.current
+          if (drag.horizontal) {
+            const threshold = Math.min(80, Math.max(56, window.innerWidth * 0.16))
+            if (endedX > threshold && canGoPrevious) goPreviousDay()
+            else if (endedX < -threshold && canGoNext) goNextDay()
+          }
+          swipePxRef.current = 0
+          setSwipePx(0)
+        }}
+        onPointerCancel={(e) => {
+          const drag = swipeDragRef.current
+          if (!drag || drag.pointerId !== e.pointerId) return
+          swipeDragRef.current = null
+          try {
+            ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+          } catch {
+            /* */
+          }
+          swipePxRef.current = 0
+          setSwipePx(0)
+        }}
       >
         <PoemSheet
           key={toDateKey(cursorDate)}
@@ -216,26 +314,8 @@ function App() {
       </div>
 
       <DayStepper
-        onPreviousDay={() => {
-          setPageMotion('from-left')
-          setCursorDate((current) => {
-            if (current <= oldestArchiveDate) {
-              return current
-            }
-
-            return shiftByDays(current, -1)
-          })
-        }}
-        onNextDay={() => {
-          setPageMotion('from-right')
-          setCursorDate((current) => {
-            if (current >= today) {
-              return current
-            }
-
-            return shiftByDays(current, 1)
-          })
-        }}
+        onPreviousDay={goPreviousDay}
+        onNextDay={goNextDay}
         canGoPrevious={canGoPrevious}
         canGoNext={canGoNext}
       />

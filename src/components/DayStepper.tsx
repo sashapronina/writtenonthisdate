@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 
 type DayStepperProps = {
@@ -14,55 +13,32 @@ export function DayStepper({
   canGoPrevious,
   canGoNext,
 }: DayStepperProps) {
-  const [showNextTip, setShowNextTip] = useState(false)
-
-  useEffect(() => {
-    if (canGoNext) setShowNextTip(false)
-  }, [canGoNext])
-
   return (
-    <>
+    <nav className="day-stepper" aria-label="Day navigation">
       <button
-        aria-label="Show previous day"
-        className="stepper stepper--left"
         type="button"
+        className="day-stepper__btn day-stepper__btn--prev"
         onClick={onPreviousDay}
         disabled={!canGoPrevious}
+        aria-label="Show previous day"
       >
-        <ArrowLeftIcon aria-hidden="true" className="stepper__icon" />
+        <ArrowLeftIcon aria-hidden="true" className="day-stepper__icon" />
+        <span className="day-stepper__label">Previous day</span>
       </button>
-      <span
-        className="stepper-host stepper-host--right"
-        onPointerEnter={() => {
-          if (!canGoNext) setShowNextTip(true)
-        }}
-        onPointerLeave={() => setShowNextTip(false)}
+      <button
+        type="button"
+        className="day-stepper__btn day-stepper__btn--next"
+        onClick={onNextDay}
+        disabled={!canGoNext}
+        aria-label={
+          canGoNext ? 'Show next day' : 'Wait until tomorrow for the next poem'
+        }
       >
-        {showNextTip && !canGoNext ? (
-          <>
-            <span className="stepper-host__hover-catcher" aria-hidden />
-            <span className="stepper-host__tooltip" id="stepper-next-tip" role="tooltip">
-              Wait till tomorrow to see
-              <br />
-              the next poem
-            </span>
-          </>
-        ) : null}
-        <span className="stepper-host__btn-wrap">
-          <button
-            aria-label="Show next day"
-            className="stepper stepper--nested"
-            type="button"
-            onClick={onNextDay}
-            disabled={!canGoNext}
-            aria-describedby={
-              !canGoNext && showNextTip ? 'stepper-next-tip' : undefined
-            }
-          >
-            <ArrowRightIcon aria-hidden="true" className="stepper__icon" />
-          </button>
+        <span className="day-stepper__label">
+          {canGoNext ? 'Next day' : 'Wait till tomorrow'}
         </span>
-      </span>
-    </>
+        <ArrowRightIcon aria-hidden="true" className="day-stepper__icon" />
+      </button>
+    </nav>
   )
 }
