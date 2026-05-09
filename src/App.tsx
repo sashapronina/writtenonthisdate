@@ -40,6 +40,8 @@ function App() {
   const monthLabel = cursorDate
     .toLocaleString('en-US', { month: 'short' })
     .toUpperCase()
+  const monthLabelMobile = cursorDate.toLocaleString('en-US', { month: 'short' })
+  const dateIsoLocal = `${cursorDate.getFullYear()}-${String(cursorDate.getMonth() + 1).padStart(2, '0')}-${String(cursorDate.getDate()).padStart(2, '0')}`
   const dayLabel = cursorDate.getDate()
   const poemsForDay = poemsByDayKey.get(toDateKey(cursorDate)) ?? []
   const activePoem = poemsForDay[0]
@@ -50,11 +52,22 @@ function App() {
     <main className="scene">
       <LightOverlay key={lightingMode} mode={lightingMode} />
       <header className="scene__header">
-        <div className="scene__date-pill" aria-label={dateLabel}>
-          <span className="scene__date-pill__month">{monthLabel}</span>
-          <span className="scene__date-pill__day">{dayLabel}</span>
+        <div className="scene__header-mobile">
+          <p className="scene__header-mobile__label">Written on this day</p>
+          <time className="scene__header-mobile__date" dateTime={dateIsoLocal}>
+            <span className="scene__header-mobile__day">{dayLabel}</span>{' '}
+            <span className="scene__header-mobile__month">{monthLabelMobile}</span>
+          </time>
         </div>
-        <p className="scene__label">Written on this day</p>
+        <div className="scene__header-desktop">
+          <div className="scene__calendar" aria-label={dateLabel}>
+            <div className="scene__calendar__stack">
+              <span className="scene__calendar__month">{monthLabel}</span>
+              <span className="scene__calendar__day">{dayLabel}</span>
+            </div>
+            <p className="scene__calendar__title">Written on this day</p>
+          </div>
+        </div>
       </header>
 
       <div className="paper-stack" aria-hidden="true">
@@ -129,6 +142,40 @@ function App() {
           leaves they weave their boats and smilingly float
           <br />
           them on the vast deep.
+          <br />
+          <br />
+          They know not how to swim, they know not how
+          <br />
+          to cast nets. Pearl-fishers dive for pearls,
+          <br />
+          merchants sail in their ships, while children
+          <br />
+          gather pebbles and scatter them again. They
+          <br />
+          seek not for hidden treasures, they know not
+          <br />
+          how to cast nets. The sea surges up with laughter
+          <br />
+          and pale gleams the smile of the sea-beach.
+          <br />
+          Death-dealing waves sing meaningless ballads to
+          <br />
+          the children, even like a mother while rocking
+          <br />
+          her baby&apos;s cradle. The sea plays with children,
+          <br />
+          and pale gleams the smile of the sea-beach.
+          <br />
+          <br />
+          On the seashore of endless worlds children meet.
+          <br />
+          Tempest roams in the pathless sky, ships get
+          <br />
+          wrecked in the trackless water, death is abroad
+          <br />
+          and children play. On the seashore of endless
+          <br />
+          worlds is the great meeting of children.
         </div>
       </div>
 

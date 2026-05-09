@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Poem } from '../lib/poems'
 
 type PoemSheetProps = {
@@ -30,65 +30,77 @@ const placeholderPoem: Pick<Poem, 'title' | 'author' | 'body' | 'approximateDate
     'Sit. Feast on your life.',
 }
 
-const TYPEWRITER_DURATION_MS = 3600
-const TYPEWRITER_TICK_MS = 16
+const PER_CHAR_FADE_MS = 1400
+const TOTAL_FADE_DURATION_MS = 7500
+const MIN_STAGGER_MS = 6
+const MAX_STAGGER_MS = 55
 
 export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
   const bodyText = poem?.body ?? placeholderPoem.body
-  const [visibleBody, setVisibleBody] = useState(bodyText)
   const [bodyAnimationKey, setBodyAnimationKey] = useState(0)
-  const [isTypingComplete, setIsTypingComplete] = useState(true)
+  const [isAnimationComplete, setIsAnimationComplete] = useState(true)
   const sheetClassName = className ? `poem-sheet ${className}` : 'poem-sheet'
+
+  const characters = useMemo(() => Array.from(bodyText), [bodyText])
+
+  const staggerMs = useMemo(() => {
+    if (characters.length <= 1) return 0
+    const computed =
+      (TOTAL_FADE_DURATION_MS - PER_CHAR_FADE_MS) / (characters.length - 1)
+    return Math.min(MAX_STAGGER_MS, Math.max(MIN_STAGGER_MS, computed))
+  }, [characters.length])
+
+  const totalAnimationMs = useMemo(() => {
+    if (characters.length === 0) return 0
+    return (characters.length - 1) * staggerMs + PER_CHAR_FADE_MS
+  }, [characters.length, staggerMs])
+
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }, [])
 
   useEffect(() => {
     if (!bodyText) {
-      const frameId = window.requestAnimationFrame(() => {
-        setVisibleBody('')
-        setBodyAnimationKey((key) => key + 1)
-        setIsTypingComplete(true)
-      })
-      return () => {
-        window.cancelAnimationFrame(frameId)
-      }
-    }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const frameId = window.requestAnimationFrame(() => {
-        setVisibleBody(bodyText)
-        setBodyAnimationKey((key) => key + 1)
-        setIsTypingComplete(true)
-      })
-      return () => {
-        window.cancelAnimationFrame(frameId)
-      }
-    }
-
-    const initialFrameId = window.requestAnimationFrame(() => {
-      setVisibleBody('')
       setBodyAnimationKey((key) => key + 1)
-      setIsTypingComplete(false)
-    })
+      setIsAnimationComplete(true)
+      return
+    }
 
-    const totalChars = bodyText.length
-    const totalTicks = Math.max(1, Math.ceil(TYPEWRITER_DURATION_MS / TYPEWRITER_TICK_MS))
-    const charsPerTick = Math.max(1, Math.ceil(totalChars / totalTicks))
-    let currentCharCount = 0
+    if (prefersReducedMotion) {
+      setBodyAnimationKey((key) => key + 1)
+      setIsAnimationComplete(true)
+      return
+    }
 
-    const intervalId = window.setInterval(() => {
-      currentCharCount = Math.min(totalChars, currentCharCount + charsPerTick)
-      setVisibleBody(bodyText.slice(0, currentCharCount))
+    setBodyAnimationKey((key) => key + 1)
+    setIsAnimationComplete(false)
 
-      if (currentCharCount >= totalChars) {
-        setIsTypingComplete(true)
-        window.clearInterval(intervalId)
-      }
-    }, TYPEWRITER_TICK_MS)
+    const timeoutId = window.setTimeout(() => {
+      setIsAnimationComplete(true)
+    }, totalAnimationMs)
 
     return () => {
-      window.cancelAnimationFrame(initialFrameId)
-      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
     }
-  }, [bodyText])
+  }, [bodyText, prefersReducedMotion, totalAnimationMs])
+
+  const renderAnimatedText = (text: string) => {
+    if (prefersReducedMotion) {
+      return text
+    }
+
+    return Array.from(text).map((char, idx) => (
+      <span
+        key={idx}
+        className="poem-sheet__char"
+        style={{ animationDelay: `${Math.round(idx * staggerMs)}ms` }}
+        aria-hidden="true"
+      >
+        {char}
+      </span>
+    ))
+  }
 
   if (!poem) {
     return (
@@ -102,24 +114,28 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
         <div className="poem-sheet__scrollable">
           <div
             key={bodyAnimationKey}
-            className={`poem-sheet__body poem-sheet__body--fade-in ${
-              isTypingComplete ? 'poem-sheet__body--sharp' : 'poem-sheet__body--typing'
-            }`}
+            className="poem-sheet__body"
+            aria-label={bodyText}
           >
-            {visibleBody}
+            {renderAnimatedText(bodyText)}
           </div>
           <footer
-            className={`poem-sheet__footer ${
-              isTypingComplete ? 'poem-sheet__footer--visible' : 'poem-sheet__footer--hidden'
+            key={`footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`}
+            className={`poem-sheet__footer${
+              isAnimationComplete ? '' : ' poem-sheet__footer--placeholder'
             }`}
           >
-            <p>{placeholderPoem.author}</p>
-            <p>{dateLabel}</p>
+            <p aria-label={placeholderPoem.author}>
+              {renderAnimatedText(placeholderPoem.author)}
+            </p>
+            <p aria-label={dateLabel}>{renderAnimatedText(dateLabel)}</p>
           </footer>
         </div>
       </article>
     )
   }
+
+  const footerDateText = `${dateLabel}${poem.year ? `, ${poem.year}` : ''}`
 
   return (
     <article className={sheetClassName} aria-live="polite">
@@ -132,22 +148,19 @@ export function PoemSheet({ poem, dateLabel, className }: PoemSheetProps) {
       <div className="poem-sheet__scrollable">
         <div
           key={bodyAnimationKey}
-          className={`poem-sheet__body poem-sheet__body--fade-in ${
-            isTypingComplete ? 'poem-sheet__body--sharp' : 'poem-sheet__body--typing'
-          }`}
+          className="poem-sheet__body"
+          aria-label={bodyText}
         >
-          {visibleBody}
+          {renderAnimatedText(bodyText)}
         </div>
         <footer
-          className={`poem-sheet__footer ${
-            isTypingComplete ? 'poem-sheet__footer--visible' : 'poem-sheet__footer--hidden'
+          key={`footer-${bodyAnimationKey}-${isAnimationComplete ? 'on' : 'off'}`}
+          className={`poem-sheet__footer${
+            isAnimationComplete ? '' : ' poem-sheet__footer--placeholder'
           }`}
         >
-          <p>{poem.author}</p>
-          <p>
-            {dateLabel}
-            {poem.year ? `, ${poem.year}` : ''}
-          </p>
+          <p aria-label={poem.author}>{renderAnimatedText(poem.author)}</p>
+          <p aria-label={footerDateText}>{renderAnimatedText(footerDateText)}</p>
         </footer>
       </div>
     </article>
